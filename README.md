@@ -115,6 +115,10 @@ By hand: copy `main.js`, `manifest.json` and `styles.css` from the latest releas
 
 ## Source
 
+## On your players' phones
+
+[DM Screen](https://github.com/walkertbrown/dm-screen), from the same maker, shows these clocks on your players' phones, ticking as you tick them. They open a link or a QR code in any phone browser, with nothing to install. DM Screen is paid ($12 once, on itch.io) with a free one-hour trial. Tabletop Clocks stays free.
+
 https://github.com/walkertbrown/tabletop-clocks
 
 ## Build
