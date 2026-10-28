@@ -1,0 +1,234 @@
+/* Tabletop Clocks. Uses Obsidian's theme variables so it fits light, dark and community themes. */
+
+.pc {
+	--pc-radius: var(--radius-m, 8px);
+	--pc-accent: var(--interactive-accent, #7852ee);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: calc(var(--pc-radius) + 4px);
+	background: var(--background-secondary);
+	padding: 12px;
+	font-family: var(--font-interface);
+	font-size: var(--font-ui-medium, 15px);
+}
+.pc button {
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	box-shadow: none;
+	height: auto;
+}
+
+.pc-heading {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 4px 2px 8px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+.pc-heading:not(:first-child) {
+	margin-top: 14px;
+}
+.pc-heading-icon {
+	display: inline-flex;
+	color: var(--pc-accent);
+}
+.pc-heading-icon svg {
+	width: 16px;
+	height: 16px;
+}
+
+.pc-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+	gap: 8px;
+}
+
+/* one clock */
+.pc-clock {
+	--pc-color: var(--pc-accent);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	padding: 12px 8px 8px;
+	border-radius: var(--pc-radius);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	min-width: 0;
+}
+.pc-red { --pc-color: var(--color-red, #fb464c); }
+.pc-orange { --pc-color: var(--color-orange, #e9973f); }
+.pc-yellow { --pc-color: var(--color-yellow, #e0ac00); }
+.pc-green { --pc-color: var(--color-green, #44cf6e); }
+.pc-cyan { --pc-color: var(--color-cyan, #53dfdd); }
+.pc-blue { --pc-color: var(--color-blue, #027aff); }
+.pc-purple { --pc-color: var(--color-purple, #a882ff); }
+.pc-pink { --pc-color: var(--color-pink, #fa99cd); }
+
+.pc-face {
+	width: 96px;
+	height: 96px;
+	overflow: visible;
+	outline: none;
+	border-radius: 50%;
+}
+.pc-face:focus-visible {
+	box-shadow: 0 0 0 2px var(--pc-color);
+}
+.pc-rim {
+	fill: var(--background-secondary);
+	stroke: color-mix(in srgb, var(--pc-color) 35%, var(--background-modifier-border));
+	stroke-width: 2;
+}
+.pc-seg {
+	fill: var(--background-modifier-border);
+	cursor: pointer;
+	transition: fill 160ms ease, filter 160ms ease, opacity 160ms ease;
+}
+.pc-seg:hover {
+	fill: color-mix(in srgb, var(--pc-color) 40%, var(--background-modifier-border));
+}
+.pc-seg.is-filled {
+	fill: var(--pc-color);
+	filter: drop-shadow(0 0 3px color-mix(in srgb, var(--pc-color) 60%, transparent));
+}
+.pc-seg.is-filled:hover {
+	opacity: 0.8;
+}
+.pc-hub {
+	fill: var(--background-primary);
+	stroke: var(--background-modifier-border);
+	stroke-width: 1.5;
+	pointer-events: none;
+}
+.pc-clock.is-full {
+	border-color: color-mix(in srgb, var(--pc-color) 60%, transparent);
+	background: color-mix(in srgb, var(--pc-color) 8%, var(--background-primary));
+}
+.pc-clock.is-full .pc-face {
+	animation: pc-glow 2.4s ease-in-out infinite;
+}
+.pc-clock.is-full .pc-hub {
+	fill: var(--pc-color);
+	stroke: none;
+}
+@keyframes pc-glow {
+	0%, 100% { filter: drop-shadow(0 0 2px color-mix(in srgb, var(--pc-color) 40%, transparent)); }
+	50% { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--pc-color) 80%, transparent)); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.pc-clock.is-full .pc-face {
+		animation: none;
+	}
+}
+
+.pc-name {
+	max-width: 100%;
+	font-weight: 600;
+	text-align: center;
+	line-height: 1.25;
+	overflow-wrap: anywhere;
+}
+.pc-row {
+	display: inline-flex;
+	align-items: center;
+	border-radius: 999px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+.pc .pc-row .pc-btn {
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	font-weight: 700;
+	color: var(--text-muted);
+}
+.pc-row .pc-btn:hover {
+	color: var(--pc-color);
+	background: var(--background-modifier-hover, rgba(127, 127, 127, 0.15));
+}
+.pc-count {
+	min-width: 3.2em;
+	text-align: center;
+	font-size: 0.85em;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--text-muted);
+}
+.is-full .pc-count {
+	color: var(--pc-color);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+/* a racing pair takes a whole row */
+.pc-race {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	gap: 8px;
+}
+.pc-vs {
+	font-size: 0.75em;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-faint, #888);
+	padding: 4px 8px;
+	border-radius: 999px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+}
+.pc-race-left > .pc-clock:last-child,
+.pc-race-right > .pc-clock:first-child {
+	opacity: 0.55;
+}
+
+.pc-empty {
+	color: var(--text-muted);
+	font-size: 0.85em;
+	padding: 6px 4px;
+}
+
+/* add box */
+.pc-foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 10px;
+}
+.pc-add-input {
+	flex: 1 1 12em;
+	min-width: 0;
+	font-family: var(--font-monospace);
+	font-size: 0.85em;
+}
+.pc .pc-foot .pc-btn {
+	padding: 5px 12px;
+	border-radius: var(--pc-radius);
+	border: 1px solid var(--pc-accent);
+	background: var(--pc-accent);
+	color: var(--text-on-accent, #fff);
+	font-weight: 600;
+}
+.pc-foot .pc-btn:hover {
+	filter: brightness(1.1);
+}
+
+@media (max-width: 480px) {
+	.pc-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.pc-face {
+		width: 80px;
+		height: 80px;
+	}
+	.pc-race {
+		gap: 4px;
+	}
+}
