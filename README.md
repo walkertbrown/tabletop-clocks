@@ -1,6 +1,6 @@
 # Tabletop Clocks
 
-Segmented progress clocks for tabletop games, drawn from plain text in your note. Track the alarm, the plan, the faction that wants you dead. Click a segment to tick it, race two clocks against each other, and the note keeps the count.
+Segmented progress clocks for tabletop games, drawn from plain text in your note. Track the alarm, the plan, the faction that wants you dead. Click a segment to tick it, race two clocks against each other, and the note keeps the count. Counters and stopwatches sit beside them, for arrows, torches and the ritual that finishes in ten minutes.
 
 ![Tabletop Clocks in a heist note, with the note's text beside it](docs/demo.png)
 
@@ -50,6 +50,32 @@ A full clock glows and shows **Full**, and a short notice says so (you can turn 
 
 Every change is written back into the line, so the note always reads fine as text, syncs like any note, and still makes sense if you ever uninstall the plugin.
 
+## Counters and stopwatches
+
+A line with a colon and a number is a counter. A colon and a time is a stopwatch. They go in the same block as the clocks:
+
+````
+```clocks
+# Supplies
+Arrows: 18 of 20
+Torches: 3 orange
+# The ritual
+Ritual: 4:12 of 10:00 purple
+Session: 0:00
+```
+````
+
+| Write | Meaning |
+| --- | --- |
+| `Arrows: 18` | a counter at 18; − and + step it, and it can go below 0 |
+| `Arrows: 18 of 20` | a counter that stays between 0 and 20, with a bar |
+| `Ritual: 4:12` | a stopwatch at 4 minutes 12 seconds (`1:04:12` past an hour) |
+| `Ritual: 4:12 of 10:00` | a stopwatch that stops at 10 minutes, with a bar |
+
+A colour word at the end and a `[[Note]]` in the name work as they do for clocks. The arrow keys step a counter you have clicked or tabbed to.
+
+A stopwatch has play/pause and reset. While it runs the line in the note doesn't change; pausing writes the time into it, and reset writes `0:00`. A running stopwatch keeps running when you switch notes or close Obsidian: the plugin remembers when it started (in its own data, by note and name) and counts from then. One with a time to reach shows **time's up** with a short notice when it gets there (the same setting turns that off).
+
 ## For other plugins
 
 Each change fires a workspace event:
@@ -62,7 +88,9 @@ this.registerEvent(
 
 The event carries `sourcePath`, `name`, `link`, `filled`, `previous`, `size` and `full`.
 
-[Session Log](https://github.com/walkertbrown/session-log) listens for it, so with both installed every tick lands in your session note's log: `- 21:02 The watch closes in: 3/6`.
+Counters fire `tabletop-clocks:count` with `sourcePath`, `name`, `link`, `value`, `previous` and `max`. Stopwatches fire `tabletop-clocks:stopwatch` when they start, pause or reset, with `sourcePath`, `name`, `link`, `seconds`, `running` and `limit` (in seconds).
+
+[Session Log](https://github.com/walkertbrown/session-log) listens for clock changes, so with both installed every tick lands in your session note's log: `- 21:02 The watch closes in: 3/6`.
 
 ## Credit
 
@@ -70,7 +98,7 @@ Progress clocks come from John Harper's *Blades in the Dark*. This plugin is not
 
 ## Privacy
 
-Tabletop Clocks does not use the network, has no accounts, collects nothing and sends nothing. It only edits the `clocks` block it is drawing.
+Tabletop Clocks does not use the network, has no accounts, collects nothing and sends nothing. It only edits the `clocks` block it is drawing, and keeps the start times of running stopwatches in its own settings file.
 
 ## Install
 

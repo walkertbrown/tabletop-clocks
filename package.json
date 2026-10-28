@@ -1,6 +1,6 @@
 {
 	"name": "tabletop-clocks",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Tabletop Clocks, Blades-style segmented clocks drawn from plain text in Obsidian notes.",
 	"main": "main.js",
 	"type": "module",

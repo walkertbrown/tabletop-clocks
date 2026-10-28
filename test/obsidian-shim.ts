@@ -26,6 +26,7 @@ export function installDomHelpers() {
 	P.show = function (this: HTMLElement) { this.style.display = ''; };
 	P.toggleClass = function (this: HTMLElement, c: string, on: boolean) { this.classList.toggle(c, on); };
 	P.setAttr = function (this: HTMLElement, k: string, v: string) { this.setAttribute(k, v); };
+	P.setCssProps = function (this: HTMLElement, props: Record<string, string>) { for (const [k, v] of Object.entries(props)) this.style.setProperty(k, v); };
 	(Element.prototype as unknown as Record<string, unknown>).createSvg = function (
 		this: Element,
 		tag: string,
@@ -116,6 +117,9 @@ export class Plugin extends Component {
 	registerMarkdownCodeBlockProcessor(lang: string, fn: (src: string, el: HTMLElement, ctx: Ctx) => void) { this.codeBlocks[lang] = fn; }
 	addCommand(c: { id: string; name: string; callback?: () => void }) { this.commands.push(c as never); }
 	registerEvent(_ref: unknown) {}
+	intervals: number[] = [];
+	registerInterval(id: number) { this.intervals.push(id); return id; }
+	onunload() { for (const id of this.intervals) window.clearInterval(id); }
 	addSettingTab(t: unknown) { this.settingTab = t; }
 	async loadData() { return this.data; }
 	async saveData(d: unknown) { this.data = d; }

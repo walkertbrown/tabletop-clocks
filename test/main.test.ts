@@ -125,3 +125,55 @@ describe('clocks block', () => {
 		expect(cmds.map((c) => [c.id, c.name])).toEqual([['insert-block', 'Insert clocks']]);
 	});
 });
+
+describe('counters and stopwatches', () => {
+	const NOTE2 = '# Fight\n\n```clocks\nArrows: 2 of 3\nRitual: 0:10 of 0:30\n```\n';
+
+	it('a counter steps with its buttons, stops at its max, and tells other plugins', async () => {
+		const { click, content, app, text } = await setup(NOTE2);
+		expect(text('.pc-counter .pc-value')).toEqual(['2 / 3']);
+		await click('.pc-counter .pc-plus');
+		expect(content()).toContain('Arrows: 3 of 3');
+		expect(app.events.at(-1)).toMatchObject({ name: 'tabletop-clocks:count', data: { name: 'Arrows', value: 3, previous: 2, max: 3 } });
+		const n = app.events.length;
+		await click('.pc-counter .pc-plus');
+		expect(content()).toContain('Arrows: 3 of 3');
+		expect(app.events.length).toBe(n);
+		await click('.pc-counter .pc-minus');
+		expect(content()).toContain('Arrows: 2 of 3');
+	});
+
+	it('a stopwatch runs from its saved start, and pausing writes the time into the note', async () => {
+		const { click, content, plugin, el, app } = await setup(NOTE2);
+		expect(el.querySelector('.pc-time')!.textContent).toBe('0:10');
+		await click('.pc-stopwatch .pc-go');
+		const key = 'Heist.md\nRitual';
+		expect(plugin.settings.running[key]).toBeTypeOf('number');
+		expect(app.events.at(-1)).toMatchObject({ name: 'tabletop-clocks:stopwatch', data: { name: 'Ritual', running: true } });
+		expect(el.querySelector('.pc-stopwatch')!.classList.contains('is-running')).toBe(true);
+		// as if it started 7 seconds ago
+		plugin.settings.running[key] = Date.now() - 7000;
+		await click('.pc-stopwatch .pc-go');
+		expect(content()).toContain('Ritual: 0:17 of 0:30');
+		expect(plugin.settings.running[key]).toBeUndefined();
+		await click('.pc-stopwatch .pc-reset');
+		expect(content()).toContain('Ritual: 0:00 of 0:30');
+		plugin.onunload();
+	});
+
+	it("a stopwatch stops at its limit and says time's up once", async () => {
+		const { click, plugin, el, render } = await setup(NOTE2);
+		await click('.pc-stopwatch .pc-go');
+		plugin.settings.running['Heist.md\nRitual'] = Date.now() - 60000;
+		Notice.last = '';
+		render();
+		expect(el.querySelector('.pc-time')!.textContent).toBe('0:30');
+		expect(el.querySelector('.pc-stopwatch')!.classList.contains('is-full')).toBe(true);
+		expect(Notice.last).toBe("Ritual: time's up.");
+		Notice.last = '';
+		render();
+		expect(Notice.last).toBe('');
+		plugin.onunload();
+	});
+});
+

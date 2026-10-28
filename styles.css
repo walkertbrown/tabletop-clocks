@@ -165,6 +165,57 @@
 	text-transform: uppercase;
 }
 
+/* a counter or a stopwatch: a big number where the clock face would be */
+.pc-value {
+	display: flex;
+	align-items: baseline;
+	justify-content: center;
+	min-height: 52px;
+	padding-top: 6px;
+	font-size: 2em;
+	font-weight: 700;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	color: var(--pc-color);
+	border-radius: var(--pc-radius);
+}
+.pc-value:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--pc-color);
+}
+.pc-value-of {
+	font-size: 0.45em;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+.pc-meter {
+	width: 80%;
+	height: 4px;
+	border-radius: 999px;
+	overflow: hidden;
+	background: color-mix(in srgb, var(--pc-color) 18%, var(--background-modifier-border));
+}
+.pc-meter-fill {
+	height: 100%;
+	border-radius: 999px;
+	background: var(--pc-color);
+	transition: width 0.3s ease;
+}
+.pc-stopwatch.is-running .pc-time {
+	animation: pc-tick 1s steps(2, jump-none) infinite;
+}
+@keyframes pc-tick {
+	50% { opacity: 0.75; }
+}
+.pc .pc-row .pc-btn .svg-icon {
+	width: 14px;
+	height: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.pc-stopwatch.is-running .pc-time { animation: none; }
+	.pc-meter-fill { transition: none; }
+}
+
 /* a racing pair takes a whole row */
 .pc-race {
 	grid-column: 1 / -1;

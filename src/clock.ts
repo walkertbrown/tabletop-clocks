@@ -1,5 +1,9 @@
-// The text side of Tabletop Clocks: reading a `clocks` block, changing one clock in it,
+// The text side of Tabletop Clocks: reading a `clocks` block, changing one clock, counter or stopwatch in it,
 // and the geometry of a segmented circle. No Obsidian here, so it is easy to test.
+//
+//   Alarm 1/4 red                 a clock
+//   Arrows: 18 of 20              a counter (the "of 20" is optional)
+//   Ritual: 4:12 of 10:00         a stopwatch (the "of 10:00" is optional)
 
 export const MIN = 2;
 export const MAX = 12;
@@ -17,9 +21,27 @@ export interface Clock {
 	written: boolean; // false when the line has no n/size yet and the default size was used
 }
 
+export interface Counter {
+	name: string;
+	link?: string;
+	value: number;
+	max?: number;
+	color?: Color;
+}
+
+export interface Stopwatch {
+	name: string;
+	link?: string;
+	seconds: number; // as written; a running one adds the time since it started
+	limit?: number;
+	color?: Color;
+}
+
 export type Item =
 	| { kind: 'heading'; index: number; text: string }
-	| { kind: 'clocks'; index: number; clocks: Clock[] };
+	| { kind: 'clocks'; index: number; clocks: Clock[] }
+	| { kind: 'counter'; index: number; counter: Counter }
+	| { kind: 'stopwatch'; index: number; stopwatch: Stopwatch };
 
 const FRACTION = /(\d+)\s*\/\s*(\d+)/g;
 const VS = /\s+vs\.?\s+/i;
@@ -33,6 +55,87 @@ function lastFraction(text: string): RegExpExecArray | null {
 	let last: RegExpExecArray | null = null;
 	for (const m of text.matchAll(FRACTION)) last = m;
 	return last;
+}
+
+// The name part of a line, with a [[link]] read out of it.
+function named(text: string): { name: string; link?: string } {
+	let rest = text;
+	let link: string | undefined;
+	const l = LINK.exec(rest);
+	if (l) {
+		link = l[1]!.trim();
+		rest = rest.replace(l[0], l[2]?.trim() ?? link);
+	}
+	return { name: rest.replace(/\s+/g, ' ').trim(), link };
+}
+
+// A trailing colour word, split off.
+function colorTail(text: string): { rest: string; color?: Color; tail: string } {
+	const m = /^(.*?)(\s+(\S+))?\s*$/.exec(text)!;
+	const word = m[3]?.toLowerCase();
+	if (m[1] && word && (COLORS as readonly string[]).includes(word)) return { rest: m[1], color: word as Color, tail: m[2]! };
+	return { rest: text.trimEnd(), tail: '' };
+}
+
+const TIME = '\\d+:\\d{2}(?::\\d{2})?';
+const STOPWATCH = new RegExp(`^(.+?):\\s*(${TIME})(?:\\s+of\\s+(${TIME}))?$`, 'i');
+const COUNTER = /^(.+?):\s*([-−]?\d+)(?:\s+of\s+(\d+))?$/i;
+
+/** "4:12" or "1:04:12" as seconds. */
+export function readTime(t: string): number {
+	return t.split(':').reduce((s, p) => s * 60 + parseInt(p, 10), 0);
+}
+
+/** Seconds as "4:12", or "1:04:12" from an hour up. */
+export function formatTime(seconds: number): string {
+	const s = Math.max(0, Math.floor(seconds));
+	const h = Math.floor(s / 3600);
+	const m = Math.floor((s % 3600) / 60);
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`;
+}
+
+// A counter or stopwatch line, with the raw text before its colon kept for writing it back.
+function readLine(t: string): { head: string; tail: string; counter?: Counter; stopwatch?: Stopwatch } | null {
+	const { rest, color, tail } = colorTail(t.trim());
+	let m = STOPWATCH.exec(rest);
+	if (m) {
+		const n = named(m[1]!);
+		if (!n.name) return null;
+		const w: Stopwatch = { ...n, seconds: readTime(m[2]!) };
+		if (m[3]) w.limit = readTime(m[3]);
+		if (color) w.color = color;
+		return { head: m[1]!, tail, stopwatch: w };
+	}
+	m = COUNTER.exec(rest);
+	if (m) {
+		const n = named(m[1]!);
+		if (!n.name) return null;
+		const c: Counter = { ...n, value: parseInt(m[2]!.replace('−', '-'), 10) };
+		if (m[3]) c.max = parseInt(m[3], 10);
+		if (color) c.color = color;
+		return { head: m[1]!, tail, counter: c };
+	}
+	return null;
+}
+
+/** A counter's next value: kept between 0 and its max when it has one. */
+export function stepCounter(c: Counter, value: number): number {
+	return c.max === undefined ? value : clamp(value, 0, c.max);
+}
+
+// Writes a new value into a counter's line, or a new time into a stopwatch's.
+export function setValue(src: string, index: number, value: number): string {
+	const lines = src.split('\n');
+	const line = lines[index];
+	const r = line === undefined ? null : readLine(line);
+	if (!r) return src;
+	const lead = /^\s*/.exec(line!)![0];
+	const v = r.counter
+		? `${value}${r.counter.max !== undefined ? ` of ${r.counter.max}` : ''}`
+		: `${formatTime(value)}${r.stopwatch!.limit !== undefined ? ` of ${formatTime(r.stopwatch!.limit)}` : ''}`;
+	lines[index] = `${lead}${r.head.trim()}: ${v}${r.tail}`;
+	return lines.join('\n');
 }
 
 // One clock: "Alarm 2/6", "[[Rival gang]] 1/8 red", or just "Alarm" (the default size, empty).
@@ -73,6 +176,15 @@ export function parseBlock(src: string, defaultSize: number): Item[] {
 		const h = HEADING.exec(t);
 		if (h) {
 			items.push({ kind: 'heading', index, text: h[1]!.trim() });
+			return;
+		}
+		const r = readLine(t);
+		if (r?.counter) {
+			items.push({ kind: 'counter', index, counter: r.counter });
+			return;
+		}
+		if (r?.stopwatch) {
+			items.push({ kind: 'stopwatch', index, stopwatch: r.stopwatch });
 			return;
 		}
 		const clocks = t
@@ -121,10 +233,12 @@ export function addLines(src: string, text: string, defaultSize: number): string
 		.map((s) => s.trim())
 		.filter(Boolean)
 		.map((s) =>
-			s
-				.split(VS)
-				.map((p) => (parseClock(p, defaultSize)?.written === false ? setFilled(p, 0, 0, 0, defaultSize) : p))
-				.join(' vs '),
+			readLine(s)
+				? s
+				: s
+						.split(VS)
+						.map((p) => (parseClock(p, defaultSize)?.written === false ? setFilled(p, 0, 0, 0, defaultSize) : p))
+						.join(' vs '),
 		);
 	if (!add.length) return src;
 	const body = src.replace(/\s+$/, '');

@@ -1,9 +1,9 @@
 {
 	"id": "tabletop-clocks",
 	"name": "Tabletop Clocks",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"minAppVersion": "1.13.0",
-	"description": "Segmented progress clocks for tabletop games, drawn from plain text in a note. Click a segment to tick it, race two clocks, and the note keeps the count.",
+	"description": "Segmented progress clocks for tabletop games, drawn from plain text in a note. Click a segment to tick it, race two clocks, keep counters and stopwatches, and the note keeps the count.",
 	"author": "Bananafest Destiny",
 	"isDesktopOnly": false
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addLines, allClocks, clickSegment, parseBlock, parseClock, setFilled, wedgePath } from '../src/clock';
+import { addLines, allClocks, clickSegment, formatTime, parseBlock, parseClock, readTime, setFilled, setValue, stepCounter, wedgePath } from '../src/clock';
 
 describe('parseClock', () => {
 	it('reads name and fill', () => {
@@ -84,3 +84,44 @@ describe('clicks and geometry', () => {
 		expect(wedgePath(0, 2, 50, 50, 40, 0)).toContain(' 0 0 1 ');
 	});
 });
+
+describe('counters and stopwatches', () => {
+	it('reads counters, stopwatches and clocks apart', () => {
+		const items = parseBlock('Arrows: 18 of 20 green\nTorches: 3\nRitual: 4:12 of 10:00\nLong rest: 1:02:03\nAlarm 1/4\nAlarm: 2/6', 4);
+		expect(items.map((i) => i.kind)).toEqual(['counter', 'counter', 'stopwatch', 'stopwatch', 'clocks', 'clocks']);
+		expect(items[0]).toMatchObject({ counter: { name: 'Arrows', value: 18, max: 20, color: 'green' } });
+		expect(items[1]).toMatchObject({ counter: { name: 'Torches', value: 3 } });
+		expect(items[2]).toMatchObject({ stopwatch: { name: 'Ritual', seconds: 252, limit: 600 } });
+		expect(items[3]).toMatchObject({ stopwatch: { name: 'Long rest', seconds: 3723 } });
+	});
+
+	it('reads a link and a negative count', () => {
+		const items = parseBlock('[[Guild|The guild]] favour: −2', 4);
+		expect(items[0]).toMatchObject({ kind: 'counter', counter: { name: 'The guild favour', link: 'Guild', value: -2 } });
+	});
+
+	it('writes a new value back, keeping the rest of the line', () => {
+		const src = 'Arrows: 18 of 20 green\n  Ritual: 4:12 of 10:00';
+		expect(setValue(src, 0, 17)).toBe('Arrows: 17 of 20 green\n  Ritual: 4:12 of 10:00');
+		expect(setValue(src, 1, 3605)).toBe('Arrows: 18 of 20 green\n  Ritual: 1:00:05 of 10:00');
+		expect(setValue(src, 1, 0)).toContain('Ritual: 0:00 of 10:00');
+	});
+
+	it('keeps a counter with a max between 0 and the max', () => {
+		expect(stepCounter({ name: 'A', value: 20, max: 20 }, 21)).toBe(20);
+		expect(stepCounter({ name: 'A', value: 0, max: 20 }, -1)).toBe(0);
+		expect(stepCounter({ name: 'A', value: 0 }, -1)).toBe(-1);
+	});
+
+	it('formats and reads times', () => {
+		expect(formatTime(0)).toBe('0:00');
+		expect(formatTime(59.9)).toBe('0:59');
+		expect(formatTime(3600)).toBe('1:00:00');
+		expect(readTime('1:04:12')).toBe(3852);
+	});
+
+	it('the add box leaves counters and stopwatches as typed', () => {
+		expect(addLines('', 'Torches: 6; Ritual: 0:00; Alarm', 4)).toBe('Torches: 6\nRitual: 0:00\nAlarm 0/4');
+	});
+});
+
