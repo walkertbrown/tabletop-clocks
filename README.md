@@ -62,6 +62,8 @@ this.registerEvent(
 
 The event carries `sourcePath`, `name`, `link`, `filled`, `previous`, `size` and `full`.
 
+[Session Log](https://github.com/walkertbrown/session-log) listens for it, so with both installed every tick lands in your session note's log: `- 21:02 The watch closes in: 3/6`.
+
 ## Credit
 
 Progress clocks come from John Harper's *Blades in the Dark*. This plugin is not made by or affiliated with its publisher; it just draws the clocks.
@@ -80,7 +82,7 @@ By hand: copy `main.js`, `manifest.json` and `styles.css` from the latest releas
 
 - [Dice Tray](https://github.com/walkertbrown/dice-tray): rolls dice, random tables and note sections inline, and reads Dice Roller's `dice:` syntax.
 - [Quick Initiative](https://github.com/walkertbrown/quick-initiative): a light initiative tracker that lives as plain text in your note.
-- [Session Log](https://github.com/walkertbrown/session-log): a quick log for game night. With Quick Initiative installed, fights log themselves.
+- [Session Log](https://github.com/walkertbrown/session-log): a quick log for game night. Fights, rolls and clock ticks log themselves.
 - [Encounter Builder](https://github.com/walkertbrown/encounter-builder): plan fights against the 5E XP budget, then start them in Quick Initiative.
 
 ## Source
